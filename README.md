@@ -1,6 +1,6 @@
 # Maze Agent
 
-A LangGraph demo: an LLM-driven cat escapes 6 mazes of rising difficulty (walls, then spikes, dogs, and a locked door with its key).
+A LangGraph demo: an LLM-driven cat escapes 6 mazes of rising difficulty, from 7x7 to 18x18 (walls, then spikes, patrolling dogs, and a locked door with its key).
 
 ![Level 4 played live by gpt-5.4-mini (sped up)](docs/demo.gif)
 
@@ -15,6 +15,13 @@ Open http://127.0.0.1:8000 and press Play. Levels chain automatically.
 
 - Terminal only: `uv run python -m maze_agent --level 5`
 - Tests (no API key needed): `uv run pytest`
+
+## The game
+
+- Mazes use the growing-tree algorithm (many junctions) plus a few loops, so dangers can be walked around.
+- Spikes guard side corridors next to the exit path. Dogs patrol at half the cat's speed and never chase.
+- Each turn the cat moves or **waits**. It is told what sits next to it, which dogs it hears and whether they come closer.
+- Every level is solvable unhurt by construction (tested). The final level is still a real challenge for small models.
 
 ## How it works
 
@@ -36,7 +43,7 @@ START -> think -> act -> think -> ... -> END
 |---|---|
 | `maze_agent/maze.py` | seeded maze generation, path search |
 | `maze_agent/world.py` | hazard rules (pure functions) |
-| `maze_agent/levels.py` | the 6 levels, hazards placed so every level is solvable |
+| `maze_agent/levels.py` | the 6 levels, hazards placed near the path but never on it |
 | `maze_agent/brain.py` | prompt, `Decision` schema, `LLMBrain` (`init_chat_model`) |
 | `maze_agent/agent.py` | the LangGraph graph |
 | `maze_agent/runner.py` | runs a level as JSON events |

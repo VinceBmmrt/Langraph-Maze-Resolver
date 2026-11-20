@@ -3,7 +3,7 @@ import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.es
 const $ = (id) => document.getElementById(id);
 const canvas = $("maze");
 const ctx = canvas.getContext("2d");
-const ARROWS = { north: "⬆", south: "⬇", east: "➡", west: "⬅" };
+const ARROWS = { north: "⬆", south: "⬇", east: "➡", west: "⬅", wait: "⏸" };
 const HURT = { spikes: "spikes!", dog: "bitten!" };
 
 const game = { levels: [], lives: 3, current: 1, cleared: new Set(), source: null };
@@ -58,6 +58,7 @@ async function loadLevel(number) {
   view = {
     maze: data.maze, world: data.world, cat: start, drawnCat: [...start],
     trail: new Set([start.join()]), lives: game.lives, steps: 0, tokens: 0,
+    catFacing: -1, dogFacing: data.world.dogs.map(() => 1),
   };
   $("level-title").textContent = `Level ${number}: ${data.title}`;
   $("thoughts").innerHTML = "";
@@ -97,6 +98,8 @@ function onThink(e) {
 }
 
 function onAct(e) {
+  view.catFacing = facing(view.cat, e.pos, view.catFacing);
+  view.dogFacing = e.world.dogs.map((dog, i) => facing(view.world.dogs[i].pos, dog.pos, view.dogFacing[i]));
   Object.assign(view, { cat: e.pos, world: e.world, lives: e.lives, steps: e.steps });
   view.trail.add(e.pos.join());
   const last = $("thoughts").firstElementChild;
@@ -109,6 +112,13 @@ function onAct(e) {
   highlight("__end__");
   stop();
   finish(e.status);
+}
+
+/** Emoji face left: flip them (-1) when moving east, keep the last facing on vertical moves. */
+function facing(from, to, current) {
+  if (to[0] > from[0]) return -1;
+  if (to[0] < from[0]) return 1;
+  return current;
 }
 
 function finish(status) {
@@ -166,8 +176,9 @@ function draw() {
   emoji("🏁", maze.goal, s);
   if (world.key) emoji("🔑", world.key, s);
   if (world.door) emoji(world.has_key ? "🔓" : "🚪", world.door, s);
-  world.dogs.forEach((dog) => emoji("🐶", dog.pos, s));
-  emoji("🐱", view.drawnCat, s, 0.8);
+  world.dogs.forEach((dog, i) => emoji("🐕", dog.pos, s, 0.75, view.dogFacing[i]));
+  const moving = Math.hypot(view.cat[0] - view.drawnCat[0], view.cat[1] - view.drawnCat[1]);
+  emoji("🐈", view.drawnCat, s, 0.85, view.catFacing, Math.sin(Math.PI * Math.min(moving, 1)) * 0.25);
 }
 
 function drawWalls(maze, s) {
@@ -198,12 +209,17 @@ function drawSpikes(x, y, s) {
   }
 }
 
-function emoji(char, [x, y], s, scale = 0.65) {
+/** Draw an emoji centred on a cell; `flip` -1 mirrors it, `hop` lifts it (in cells). */
+function emoji(char, [x, y], s, scale = 0.65, flip = 1, hop = 0) {
+  ctx.save();
+  ctx.translate((x + 0.5) * s, (y + 0.5 - hop) * s);
+  ctx.scale(flip, 1);
   ctx.fillStyle = "#fff";
   ctx.font = `${s * scale}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(char, (x + 0.5) * s, (y + 0.55) * s);
+  ctx.fillText(char, 0, 0);
+  ctx.restore();
 }
 
 function cssVar(name) {

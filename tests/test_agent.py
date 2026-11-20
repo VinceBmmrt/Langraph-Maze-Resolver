@@ -157,3 +157,14 @@ def test_observation_tells_dog_heading():
     maze = generate(6, 3)
     world = World(dogs=(Dog(pos=(1, 1), home=(2, 2), prev=(2, 1)),))
     assert "You hear a dog at (1, 1), coming closer." in view(start_state(maze, world), maze)
+
+
+def test_eval_summary_counts_first_try_and_learning():
+    from maze_agent.eval import summarize
+
+    lost = {"model": "m", "level": 1, "status": "dead", "steps": 9, "lives_lost": 3, "cost": 0.01}
+    won = {**lost, "status": "won", "steps": 14, "lives_lost": 0, "cost": 0.02}
+    chains = [[won], [lost, won]]
+    (row,) = summarize([won, lost, won], chains)
+    assert (row["first_try"], row["with_learning"], row["attempts"], row["steps"]) == (0.5, 1.0, 3, 14)
+    assert abs(row["cost_per_win"] - 0.025) < 1e-12 and row["optimal"] == 12

@@ -124,3 +124,12 @@ def _distances(maze: Maze, sources: list[Pos]) -> dict[Pos, int]:
                 depth[nxt] = depth[cell] + 1
                 queue.append(nxt)
     return depth
+
+
+def optimal_steps(level: Level) -> int:
+    """Fewest moves to escape, fetching the key first when there is a door."""
+    maze, world = build(level)
+    if world.key is None:
+        return len(shortest_path(maze, maze.start, maze.goal)) - 1
+    to_key = shortest_path(maze, maze.start, world.key, world.locked)
+    return len(to_key) - 1 + len(shortest_path(maze, world.key, maze.goal)) - 1

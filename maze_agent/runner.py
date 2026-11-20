@@ -19,14 +19,26 @@ def context(level: Level, brain: Brain, *, memory_key: str, ask_human: bool = Fa
 
 
 async def play(
-    level: Level, ctx: Context, thread_id: str, *, resume: str | None = None, tokens: bool = False
+    level: Level,
+    ctx: Context,
+    thread_id: str,
+    *,
+    resume: str | None = None,
+    tokens: bool = False,
+    tags: list[str] | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Yield `think`, `act`, `ask_human`, `reflect` events, `interrupt` when the cat asks for help,
     and (with `tokens`) a `token` event per streamed LLM chunk of the `think` node.
 
     Pass `resume` (the player's answer) to continue a run paused by an interrupt.
+    `tags` and the metadata below show up on the run in LangSmith when tracing is on.
     """
-    config: RunnableConfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": 4 * ctx.max_steps}
+    config: RunnableConfig = {
+        "configurable": {"thread_id": thread_id},
+        "recursion_limit": 4 * ctx.max_steps,
+        "tags": tags or [],
+        "metadata": {"level": level.number, "model": ctx.brain.model},
+    }
     inputs = Command(resume=resume) if resume is not None else start_state(ctx.maze, build(level)[1], level.lives)
     modes: list[StreamMode] = ["updates", "messages"] if tokens else ["updates"]
     async for chunk in graph.astream(inputs, config, context=ctx, stream_mode=modes, version="v2"):

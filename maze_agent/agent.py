@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from maze_agent.brain import Brain
 from maze_agent.maze import Maze, Pos, nearest_unvisited, step
-from maze_agent.world import World, move_cat, move_dogs
+from maze_agent.world import Dog, World, move_cat, move_dogs
 
 LIVES = 3
 HEARING = 3
@@ -59,29 +59,40 @@ def observe(state: State, maze: Maze) -> str:
         lines.append("You carry the key." if world.has_key else "You do not have the key yet.")
     if state.event in EVENTS:
         lines.append(f"Last turn {EVENTS[state.event]}.")
-    lines.append("Open directions:")
+    lines.append("Open directions (or wait):")
     for d in maze.exits(pos):
         cell = step(pos, d)
-        lines.append(f"- {d} -> {cell}, visited {state.visits.get(cell, 0)} times{_hazard(world, maze, cell)}")
-    lines += [f"You hear a dog at {dog.pos}." for dog in world.dogs if 1 < _distance(dog.pos, pos) <= HEARING]
+        lines.append(f"- {d} -> {cell}, visited {state.visits.get(cell, 0)} times{_hazard(world, maze, cell, pos)}")
+    lines += [
+        f"You hear a dog at {dog.pos}{_heading(dog, pos)}." for dog in world.dogs if _distance(dog.pos, pos) <= HEARING
+    ]
     if hint := nearest_unvisited(maze, pos, set(state.visits), world.locked | set(world.spikes)):
         cell, dist, first = hint
         lines.append(f"Mental map: nearest unexplored opening is {cell}, {dist} steps away (go {first} first).")
     return "\n".join(lines)
 
 
-def _hazard(world: World, maze: Maze, cell: Pos) -> str:
+def _hazard(world: World, maze: Maze, cell: Pos, cat: Pos) -> str:
+    """What sits on a neighbouring cell, plus a warning when a dog could pounce there."""
     if cell == maze.goal:
         return " EXIT!"
     if world.dog_at(cell):
         return " DOG!"
     if cell in world.spikes:
         return " SPIKES!"
+    near_dog = any(step(cell, d) != cat and world.dog_at(step(cell, d)) for d in maze.exits(cell))
+    warning = ", a dog is right next to it!" if near_dog else ""
     if cell == world.key:
-        return " KEY"
+        return " KEY" + warning
     if cell == world.door:
-        return " open door" if world.has_key else " LOCKED DOOR"
-    return ""
+        return (" open door" if world.has_key else " LOCKED DOOR") + warning
+    return warning
+
+
+def _heading(dog: Dog, cat: Pos) -> str:
+    if dog.prev is None or _distance(dog.pos, cat) == _distance(dog.prev, cat):
+        return ""
+    return ", coming closer" if _distance(dog.pos, cat) < _distance(dog.prev, cat) else ", moving away"
 
 
 def _distance(a: Pos, b: Pos) -> int:
@@ -107,12 +118,16 @@ def act(state: State, runtime: Runtime[Context]) -> Command[Literal["think", "__
         "world": world,
         "lives": max(lives, 0),
         "steps": steps,
-        "visits": {**state.visits, outcome.pos: state.visits.get(outcome.pos, 0) + 1},
+        "visits": _visit(state.visits, outcome.pos) if outcome.pos != state.pos else state.visits,
         "event": "dog" if bites else outcome.event,
         "status": status,
     }
     goto: Literal["think", "__end__"] = "think" if status == "running" else "__end__"
     return Command(update=update, goto=goto)
+
+
+def _visit(visits: dict[Pos, int], cell: Pos) -> dict[Pos, int]:
+    return {**visits, cell: visits.get(cell, 0) + 1}
 
 
 def _status(escaped: bool, lives: int, steps: int, max_steps: int) -> Status:

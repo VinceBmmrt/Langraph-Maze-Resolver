@@ -6,7 +6,8 @@ from langchain_core.runnables import RunnableConfig
 from maze_agent.agent import Context, graph, observe, start_state
 from maze_agent.brain import Decision
 from maze_agent.levels import build, get_level
-from maze_agent.maze import DIRECTIONS, shortest_path
+from maze_agent.maze import DIRECTIONS, generate, shortest_path, step
+from maze_agent.world import Dog, World
 
 
 class RouteBrain:
@@ -95,11 +96,29 @@ def test_runner_streams_json_events():
 
 
 def test_mental_map_leads_back_across_crossed_spikes():
-    maze, world = build(get_level(6))
-    spike = (8, 1)
-    behind = (11, 6)
-    pocket = {c for c in maze.passages if shortest_path(maze, behind, c, frozenset({spike}))}
-    visited = set(shortest_path(maze, maze.start, behind)) | pocket
-    assert spike in visited and maze.start not in pocket  # fully explored pocket behind the spikes
-    state = start_state(maze, world).model_copy(update={"pos": behind, "visits": dict.fromkeys(visited, 1)})
+    maze = generate(8, 1)  # perfect maze: the pocket behind the spike has no other exit
+    solution = shortest_path(maze, maze.start, maze.goal)
+    beyond = {c: shortest_path(maze, maze.start, c) for c in maze.passages if c not in solution}
+    spike = next(c for c, path in beyond.items() if any(c in p[:-1] for p in beyond.values()))
+    pocket = {c for c, path in beyond.items() if spike in path[:-1]}
+    world = World(spikes=(spike,))
+    visited = set(beyond[spike]) | pocket
+    state = start_state(maze, world).model_copy(update={"pos": next(iter(pocket)), "visits": dict.fromkeys(visited, 1)})
     assert "Mental map" in observe(state, maze)
+
+
+def test_observation_warns_of_a_dog_next_to_a_cell():
+    maze = generate(6, 3)
+    a = maze.start
+    b = step(a, maze.exits(a)[0])
+    c = step(b, next(d for d in maze.exits(b) if step(b, d) != a))
+    world = World(dogs=(Dog(pos=c, home=c),))
+    state = start_state(maze, world)
+    assert "a dog is right next to it!" in observe(state, maze)
+
+
+def test_observation_tells_dog_heading():
+    maze = generate(6, 3)
+    world = World(dogs=(Dog(pos=(1, 1), home=(2, 2), prev=(2, 1)),))
+    state = start_state(maze, world)
+    assert "You hear a dog at (1, 1), coming closer." in observe(state, maze)

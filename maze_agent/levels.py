@@ -41,21 +41,25 @@ def get_level(number: int) -> Level:
 def build(level: Level) -> tuple[Maze, World]:
     """Generate the maze and place hazards, deterministically from the level seed.
 
-    Hazards sit off the solution path, so a careful cat can always escape unhurt, but close to it,
-    so they matter: spikes guard side-branch entrances and dogs live just behind them, free to
-    roam onto the path. The door sits on the solution path and its key is reachable without crossing it.
+        Hazards sit off the solution path, so a careful cat can always escape unhurt, but close to it,
+        so they matter: spikes guard side-branch entrances and dogs live just behind them, free to
+        roam onto the path. The door sits late on the solution path; its key lies before the door,
+    as far from it as the maze allows, so the cat must search and then come back.
     """
     maze = generate(level.size, level.seed)
     rng = random.Random(level.seed)
     door = key = region = None
     if level.door:
         solution = shortest_path(maze, maze.start, maze.goal)
-        key, fork = _key_spot(maze, solution, _shuffled(_off_path(maze, solution), rng))
-        door = solution[fork + 1]
+        door = solution[len(solution) * 3 // 4]
         region = _reachable(maze, maze.start, door)
+        key = max(
+            (c for c in _off_path(maze, solution) if c in region),
+            key=lambda c: min(_manhattan(c, door), _manhattan(c, maze.start)),  # far from the door and the start
+        )
     maze = add_loops(maze, level.loops, rng, region)
     solution = shortest_path(maze, maze.start, maze.goal)
-    depth = _depths(maze, solution)
+    depth = _distances(maze, solution)
     free = _shuffled(_off_path(maze, solution), rng)
     reserved = set(shortest_path(maze, maze.start, key, frozenset({door}))) if key and door else set()
     spikes = _spike_spots(maze, sorted((c for c in free if c not in reserved), key=lambda c: depth[c]), level.spikes)
@@ -104,10 +108,14 @@ def _spike_spots(maze: Maze, candidates: list[Pos], count: int) -> tuple[Pos, ..
     return tuple(spikes)
 
 
-def _depths(maze: Maze, solution: list[Pos]) -> dict[Pos, int]:
-    """Distance from every cell to the solution path (0 on the path)."""
-    depth = dict.fromkeys(solution, 0)
-    queue = list(solution)
+def _manhattan(a: Pos, b: Pos) -> int:
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def _distances(maze: Maze, sources: list[Pos]) -> dict[Pos, int]:
+    """Steps from every cell to the nearest source cell (0 on a source)."""
+    depth = dict.fromkeys(sources, 0)
+    queue = list(sources)
     for cell in queue:
         for d in maze.exits(cell):
             nxt = step(cell, d)
@@ -115,18 +123,3 @@ def _depths(maze: Maze, solution: list[Pos]) -> dict[Pos, int]:
                 depth[nxt] = depth[cell] + 1
                 queue.append(nxt)
     return depth
-
-
-def _key_spot(maze: Maze, solution: list[Pos], free: list[Pos]) -> tuple[Pos, int]:
-    """A key cell and the solution index its branch forks from, preferring forks late in the path."""
-    forks = {c: _fork_index(maze, solution, c) for c in free}
-    usable = [c for c in free if forks[c] < len(solution) - 2]
-    late = [c for c in usable if forks[c] >= len(solution) // 2]
-    key = (late or usable)[0]
-    return key, forks[key]
-
-
-def _fork_index(maze: Maze, solution: list[Pos], cell: Pos) -> int:
-    """Index of the last solution cell on the way from the start to `cell`."""
-    on_path = set(solution)
-    return max(solution.index(c) for c in shortest_path(maze, maze.start, cell) if c in on_path)

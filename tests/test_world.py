@@ -33,6 +33,7 @@ def test_level_is_solvable_unhurt(level):
         assert len(shortest_path(maze, maze.start, dog.home)) > level.size
     if level.door:
         assert not shortest_path(maze, maze.start, maze.goal, world.locked)  # the door cannot be bypassed
+        assert len(shortest_path(maze, world.key, world.door)) > level.size  # the key is a real detour
         assert world.key and shortest_path(maze, maze.start, world.key, world.locked)
 
 

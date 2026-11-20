@@ -217,7 +217,7 @@ function showHelp(question) {
   if (question) {
     $("help-question").textContent = question;
     $("help-text").value = "";
-    $("help-text").focus();
+    $("help-text").focus({ preventScroll: true });
   }
 }
 

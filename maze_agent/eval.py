@@ -55,9 +55,19 @@ async def chain(level: Level, model: str, attempts: int, gate: asyncio.Semaphore
     return runs
 
 
-def summarize(runs: list[dict], chains: list[list[dict]]) -> list[dict]:
+def chains_of(runs: list[dict]) -> list[list[dict]]:
+    """Split runs (stored chain after chain) back into chains: each chain starts at attempt 1."""
+    chains: list[list[dict]] = []
+    for run in runs:
+        if run["attempt"] == 1:
+            chains.append([])
+        chains[-1].append(run)
+    return chains
+
+
+def summarize(runs: list[dict]) -> list[dict]:
     """One row per model and level."""
-    rows = []
+    chains, rows = chains_of(runs), []
     for model in dict.fromkeys(r["model"] for r in runs):
         for number in sorted({r["level"] for r in runs if r["model"] == model}):
             mine = [c for c in chains if c[0]["model"] == model and c[0]["level"] == number]
@@ -81,17 +91,25 @@ def summarize(runs: list[dict], chains: list[list[dict]]) -> list[dict]:
     return rows
 
 
-async def main(models: list[str], levels: list[int], repeats: int, attempts: int, concurrency: int) -> None:
+async def main(
+    models: list[str], levels: list[int], repeats: int, attempts: int, concurrency: int, update: bool
+) -> None:
     gate = asyncio.Semaphore(concurrency)
     jobs = [chain(get_level(n), m, attempts, gate) for m in models for n in levels for _ in range(repeats)]
     started = time.perf_counter()
     chains = await asyncio.gather(*jobs)
     runs = [r for c in chains for r in c]
+    if update and RESULTS.exists():  # keep the other models and levels from the previous report
+        measured = {(m, n) for m in models for n in levels}
+        old = json.loads(RESULTS.read_text())["runs"]
+        runs = [r for r in old if (r["model"], r["level"]) not in measured] + runs
+        models = list(dict.fromkeys(r["model"] for r in runs))
+        levels = sorted({r["level"] for r in runs})
     report = {
         "generated": datetime.now(UTC).isoformat(timespec="seconds"),
         "config": {"models": models, "levels": levels, "repeats": repeats, "max_attempts": attempts},
         "minutes": round((time.perf_counter() - started) / 60, 1),
-        "rows": summarize(runs, chains),
+        "rows": summarize(runs),
         "runs": runs,
     }
     RESULTS.parent.mkdir(exist_ok=True)
@@ -106,5 +124,6 @@ if __name__ == "__main__":
     parser.add_argument("--repeats", type=int, default=2, help="independent chains per model and level")
     parser.add_argument("--attempts", type=int, default=3, help="max attempts per chain (learning between them)")
     parser.add_argument("--concurrency", type=int, default=8)
+    parser.add_argument("--update", action="store_true", help="replace only these models and levels in the report")
     args = parser.parse_args()
-    asyncio.run(main(args.models, args.levels, args.repeats, args.attempts, args.concurrency))
+    asyncio.run(main(args.models, args.levels, args.repeats, args.attempts, args.concurrency, args.update))

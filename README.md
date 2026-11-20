@@ -51,7 +51,7 @@ START -> think -> act -> think ...           the cat explores
 | **Cancellation** | `server.play_level` | Closing the page stops the graph, so no tokens are spent once nobody is watching. |
 | **Tags and metadata** in the run config | `runner.play` | Runs are tagged by level and model, ready for LangSmith (`LANGSMITH_TRACING=true`). |
 
-![When stuck, the graph pauses in ask_human and waits for your hint (shown here with the scripted test brain)](docs/help.png)
+![When stuck, the graph pauses in ask_human and waits for your hint](docs/help.png)
 
 From LangChain: `init_chat_model` (any provider from one id) and `with_structured_output(method="json_schema")` (native structured output: a `Decision` with the thought first, then the direction).
 

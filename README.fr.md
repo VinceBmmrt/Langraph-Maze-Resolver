@@ -51,7 +51,7 @@ START -> think -> act -> think ...           le chat explore
 | **Annulation** | `server.play_level` | Fermer la page arrête le graphe : aucun token n'est dépensé une fois que plus personne ne regarde. |
 | **Tags et métadonnées** dans la config d'exécution | `runner.play` | Les exécutions sont étiquetées par niveau et modèle, prêtes pour LangSmith (`LANGSMITH_TRACING=true`). |
 
-![Bloqué, le graphe se met en pause dans ask_human et attend votre indice (ici avec le cerveau scripté des tests)](docs/help.png)
+![Bloqué, le graphe se met en pause dans ask_human et attend votre indice](docs/help.png)
 
 Côté LangChain : `init_chat_model` (n'importe quel fournisseur à partir d'un identifiant) et `with_structured_output(method="json_schema")` (sortie structurée native : une `Decision` avec la pensée d'abord, puis la direction).
 

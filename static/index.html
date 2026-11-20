@@ -8,42 +8,67 @@
 </head>
 <body>
   <header>
-    <h1>🐱 Maze Agent</h1>
+    <h1>🐈 Maze Agent</h1>
     <span class="sub">a LangGraph agent escaping mazes of rising difficulty</span>
-    <span id="model" class="badge"></span>
+    <nav class="tabs">
+      <button data-tab="play" class="current">Play</button>
+      <button data-tab="eval">Evaluation</button>
+    </nav>
   </header>
 
-  <ol id="levels" class="levels"></ol>
+  <div id="play-tab">
+    <ol id="levels" class="levels"></ol>
 
-  <main>
-    <section class="card board">
-      <div class="board-head">
-        <h2 id="level-title">Level</h2>
-        <div class="stats">
-          <span id="hearts" title="Lives"></span>
-          <span>👣 <b id="steps">0</b></span>
-          <span><b id="tokens">0</b> tokens</span>
+    <main>
+      <section class="card board">
+        <div class="board-head">
+          <h2 id="level-title">Level</h2>
+          <div class="stats">
+            <span id="hearts" title="Lives"></span>
+            <span>👣 <b id="steps">0</b></span>
+            <span><b id="tokens">0</b> tokens</span>
+            <span><b id="cost">$0</b></span>
+          </div>
         </div>
-      </div>
-      <canvas id="maze" width="640" height="640"></canvas>
-      <div class="controls">
-        <button id="play">▶ Play</button>
-        <label><input type="checkbox" id="auto" checked> auto-advance</label>
-        <span id="banner"></span>
-      </div>
-    </section>
+        <canvas id="maze" width="640" height="640"></canvas>
+        <div class="controls">
+          <button id="play">▶ Play</button>
+          <select id="model" title="Model"></select>
+          <label><input type="checkbox" id="auto" checked> auto-advance</label>
+          <span id="banner"></span>
+        </div>
+        <form id="help" class="help" hidden>
+          <p>🐈 <b id="help-question"></b> <small>(the graph is paused in <code>ask_human</code>)</small></p>
+          <div class="help-row">
+            <button type="button" data-answer="go north">⬆</button>
+            <button type="button" data-answer="go south">⬇</button>
+            <button type="button" data-answer="go west">⬅</button>
+            <button type="button" data-answer="go east">➡</button>
+            <input id="help-text" placeholder="or type a hint, e.g. the key is in the top right" maxlength="200">
+            <button type="submit">Send</button>
+          </div>
+        </form>
+      </section>
 
-    <aside>
-      <section class="card">
-        <h2>Graph</h2>
-        <div id="graph" class="graph"></div>
-      </section>
-      <section class="card thoughts-card">
-        <h2>Thoughts <small>(click one to see the exact prompt)</small></h2>
-        <ol id="thoughts" class="thoughts"></ol>
-      </section>
-    </aside>
-  </main>
+      <aside>
+        <section class="card">
+          <h2>Graph</h2>
+          <div id="graph" class="graph"></div>
+        </section>
+        <section class="card">
+          <h2>Memory <small>(lessons from failed attempts, LangGraph Store)</small></h2>
+          <ol id="lessons" class="lessons"></ol>
+          <button id="forget" class="link" hidden>Forget these lessons</button>
+        </section>
+        <section class="card thoughts-card">
+          <h2>Thoughts <small>(streamed live, click one to see the exact prompt)</small></h2>
+          <ol id="thoughts" class="thoughts"></ol>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="eval-tab" hidden></div>
 
   <script type="module" src="/static/app.js"></script>
 </body>

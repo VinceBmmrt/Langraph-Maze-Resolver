@@ -1,28 +1,44 @@
 import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+import { draw, facing } from "./draw.js";
+import { showEval } from "./eval.js";
 
 const $ = (id) => document.getElementById(id);
-const canvas = $("maze");
-const ctx = canvas.getContext("2d");
 const ARROWS = { north: "⬆", south: "⬇", east: "➡", west: "⬅", wait: "⏸" };
 const HURT = { spikes: "spikes!", dog: "bitten!" };
 
-const game = { levels: [], lives: 3, current: 1, cleared: new Set(), source: null };
-let view = null; // { maze, world, cat, drawnCat, trail, lives, steps, tokens }
+const game = { levels: [], current: 1, cleared: new Set(), source: null, thread: null, live: "" };
+let view = null; // the level being shown: maze, world, cat position, stats
 
-async function getJson(url) {
-  const res = await fetch(url);
+async function getJson(url, options) {
+  const res = await fetch(url, options);
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
   return res.json();
 }
 
 async function init() {
   const info = await getJson("/api/levels");
-  Object.assign(game, { levels: info.levels, lives: info.lives });
-  $("model").textContent = info.model;
+  game.levels = info.levels;
+  for (const m of info.models) {
+    const option = new Option(m.available ? m.label : `${m.label} (no API key)`, m.id, false, m.id === info.default_model);
+    option.disabled = !m.available;
+    $("model").append(option);
+  }
+  $("model").onchange = () => { stop(); loadLevel(game.current); };
   $("play").onclick = () => (game.source ? stop() : start());
+  $("forget").onclick = forget;
+  $("help").onsubmit =(e) => { e.preventDefault(); answer($("help-text").value); };
+  document.querySelectorAll("[data-answer]").forEach((b) => (b.onclick = () => answer(b.dataset.answer)));
+  document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
   await renderGraph();
   await loadLevel(1);
   requestAnimationFrame(animate);
+}
+
+function showTab(tab) {
+  document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("current", b.dataset.tab === tab));
+  $("play-tab").hidden = tab !== "play";
+  $("eval-tab").hidden = tab !== "eval";
+  if (tab === "eval") showEval($("eval-tab"));
 }
 
 async function renderGraph() {
@@ -57,43 +73,94 @@ async function loadLevel(number) {
   const start = data.maze.start;
   view = {
     maze: data.maze, world: data.world, cat: start, drawnCat: [...start],
-    trail: new Set([start.join()]), lives: game.lives, steps: 0, tokens: 0,
+    trail: new Set([start.join()]), maxLives: data.lives, lives: data.lives, steps: 0, tokens: 0, cost: 0,
     catFacing: -1, dogFacing: data.world.dogs.map(() => 1),
   };
   $("level-title").textContent = `Level ${number}: ${data.title}`;
   $("thoughts").innerHTML = "";
   setBanner("", "");
+  showHelp(null);
   updateStats();
   renderLevels();
   highlight("__start__");
+  await renderLessons();
 }
+
+// ---------- running ----------
 
 function start() {
   loadLevel(game.current).then(() => {
-    game.source = new EventSource(`/api/levels/${game.current}/play`);
-    game.source.addEventListener("think", (e) => onThink(JSON.parse(e.data)));
-    game.source.addEventListener("act", (e) => onAct(JSON.parse(e.data)));
-    game.source.addEventListener("done", stop);
-    game.source.onerror = () => { stop(); setBanner("Connection lost", "lost"); };
-    $("play").textContent = "■ Stop";
+    const model = encodeURIComponent($("model").value);
+    listen(new EventSource(`/api/levels/${game.current}/play?model=${model}`));
     highlight("think");
   });
+}
+
+/** Resume the paused graph with the player's advice (Command(resume=...) on the server). */
+function answer(text) {
+  if (!text.trim() || !game.thread) return;
+  showHelp(null);
+  addNote(`🧑 You: "${text}"`);
+  listen(new EventSource(`/api/runs/${game.thread}/resume?answer=${encodeURIComponent(text)}`));
+}
+
+function listen(source) {
+  game.source = source;
+  const on = (name, handler) => source.addEventListener(name, (e) => handler(JSON.parse(e.data)));
+  on("start", (e) => (game.thread = e.thread_id));
+  on("token", onToken);
+  on("think", onThink);
+  on("act", onAct);
+  on("ask_human", () => highlight("think"));
+  on("interrupt", onInterrupt);
+  on("reflect", onReflect);
+  on("done", () => { source.close(); if (game.source === source) game.source = null; setPlaying(); });
+  source.onerror = () => { source.close(); game.source = null; setPlaying(); };
+  setPlaying();
 }
 
 function stop() {
   game.source?.close();
   game.source = null;
-  $("play").textContent = "▶ Play";
+  showHelp(null);
+  setPlaying();
+}
+
+function setPlaying() {
+  $("play").textContent = game.source ? "■ Stop" : "▶ Play";
+}
+
+/** Live streaming: the LLM writes JSON token by token; show the "thought" field as it grows. */
+function onToken(e) {
+  highlight("think");
+  let li = $("thoughts").querySelector("li.live");
+  if (!li) {
+    game.live = "";
+    li = document.createElement("li");
+    li.className = "live";
+    li.innerHTML = `<div class="text"></div><div class="meta">step ${view.steps + 1} · thinking…</div>`;
+    $("thoughts").prepend(li);
+  }
+  game.live += e.text;
+  li.querySelector(".text").textContent = `💭 ${partialThought(game.live)}`;
+}
+
+function partialThought(json) {
+  const match = json.match(/"thought"\s*:\s*"((?:[^"\\]|\\.)*)/);
+  if (!match) return "";
+  try { return JSON.parse(`"${match[1].replace(/\\$/, "")}"`); } catch { return match[1]; }
 }
 
 function onThink(e) {
   highlight("act");
   view.tokens += e.tokens;
-  const li = document.createElement("li");
+  view.cost += e.cost;
+  const li = $("thoughts").querySelector("li.live") || document.createElement("li");
+  li.className = "";
   li.innerHTML = `<div><b>${ARROWS[e.direction]}</b> ${escape(e.thought)}</div>
     <div class="meta">step ${view.steps + 1} · ${e.tokens} tokens</div><pre>${escape(e.observation)}</pre>`;
   li.onclick = () => li.classList.toggle("open");
-  $("thoughts").prepend(li);
+  if (!li.parentNode) $("thoughts").prepend(li);
   updateStats();
 }
 
@@ -109,23 +176,31 @@ function onAct(e) {
   }
   updateStats();
   if (e.status === "running") return highlight("think");
-  highlight("__end__");
-  stop();
-  finish(e.status);
-}
-
-/** Emoji face left: flip them (-1) when moving east, keep the last facing on vertical moves. */
-function facing(from, to, current) {
-  if (to[0] > from[0]) return -1;
-  if (to[0] < from[0]) return 1;
-  return current;
-}
-
-function finish(status) {
-  if (status !== "won") {
-    const why = status === "dead" ? "Out of lives" : "Out of steps";
-    return setBanner(`${why}. Press Play to retry.`, "lost");
+  if (e.status === "won") {
+    highlight("__end__");
+    return finish();
   }
+  highlight("reflect");
+  setBanner(`${e.status === "dead" ? "Out of lives" : "Out of steps"}. The cat is writing a lesson…`, "lost");
+}
+
+/** Human in the loop: the graph paused in `ask_human` and waits for the player. */
+function onInterrupt(e) {
+  highlight("ask_human");
+  showHelp(e.question);
+  addNote(`🐈 "${e.question}"`);
+}
+
+function onReflect(e) {
+  highlight("__end__");
+  view.cost += e.cost;
+  updateStats();
+  addNote(`📝 Lesson learned: ${e.lesson}`);
+  setBanner("Lost. Press Play to retry: the cat will remember its lesson.", "lost");
+  renderLessons();
+}
+
+function finish() {
   game.cleared.add(game.current);
   renderLevels();
   const next = game.current + 1;
@@ -135,15 +210,48 @@ function finish(status) {
   else game.current = next;
 }
 
+// ---------- side panels ----------
+
+function showHelp(question) {
+  $("help").hidden = !question;
+  if (question) {
+    $("help-question").textContent = question;
+    $("help-text").value = "";
+    $("help-text").focus();
+  }
+}
+
+async function renderLessons() {
+  const model = encodeURIComponent($("model").value);
+  const { lessons } = await getJson(`/api/lessons?level=${game.current}&model=${model}`);
+  $("lessons").innerHTML = lessons.length ? "" : "<li class='empty'>No lesson yet: they are written after a failure.</li>";
+  lessons.forEach((text) => $("lessons").append(Object.assign(document.createElement("li"), { textContent: text })));
+  $("forget").hidden = !lessons.length;
+}
+
+async function forget() {
+  const model = encodeURIComponent($("model").value);
+  await getJson(`/api/lessons?level=${game.current}&model=${model}`, { method: "DELETE" });
+  renderLessons();
+}
+
+function addNote(text) {
+  const li = document.createElement("li");
+  li.className = "note";
+  li.textContent = text;
+  $("thoughts").prepend(li);
+}
+
 function setBanner(text, kind) {
   $("banner").textContent = text;
   $("banner").className = kind;
 }
 
 function updateStats() {
-  $("hearts").textContent = "❤️".repeat(view.lives) + "🖤".repeat(game.lives - view.lives);
+  $("hearts").textContent = "❤️".repeat(view.lives) + "🖤".repeat(view.maxLives - view.lives);
   $("steps").textContent = view.steps;
   $("tokens").textContent = view.tokens.toLocaleString();
+  $("cost").textContent = `$${view.cost.toFixed(4)}`;
 }
 
 function escape(text) {
@@ -152,89 +260,12 @@ function escape(text) {
   return div.innerHTML;
 }
 
-// ---------- drawing ----------
-
 function animate() {
   if (view) {
     view.drawnCat = view.drawnCat.map((v, i) => v + (view.cat[i] - v) * 0.25);
-    draw();
+    draw(view);
   }
   requestAnimationFrame(animate);
-}
-
-function draw() {
-  const { maze, world } = view;
-  const s = canvas.width / maze.size;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = cssVar("--trail");
-  for (const key of view.trail) {
-    const [x, y] = key.split(",").map(Number);
-    ctx.fillRect(x * s, y * s, s, s);
-  }
-  drawWalls(maze, s);
-  world.spikes.forEach(([x, y]) => drawSpikes(x, y, s));
-  emoji("🏁", maze.goal, s);
-  if (world.key) emoji("🔑", world.key, s);
-  if (world.door) emoji(world.has_key ? "🔓" : "🚪", world.door, s);
-  world.dogs.forEach((dog, i) => emoji("🐩", dog.pos, s, 0.75, view.dogFacing[i]));
-  glow(view.drawnCat, s);
-  const moving = Math.hypot(view.cat[0] - view.drawnCat[0], view.cat[1] - view.drawnCat[1]);
-  emoji("🐈", view.drawnCat, s, 0.85, view.catFacing, Math.sin(Math.PI * Math.min(moving, 1)) * 0.25);
-}
-
-function drawWalls(maze, s) {
-  ctx.strokeStyle = cssVar("--wall");
-  ctx.lineWidth = Math.max(2, s / 14);
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  maze.cells.forEach((row, y) => row.forEach((open, x) => {
-    const [l, t, r, b] = [x * s, y * s, (x + 1) * s, (y + 1) * s];
-    if (!open.includes("north")) { ctx.moveTo(l, t); ctx.lineTo(r, t); }
-    if (!open.includes("west")) { ctx.moveTo(l, t); ctx.lineTo(l, b); }
-    if (x === maze.size - 1 && !open.includes("east")) { ctx.moveTo(r, t); ctx.lineTo(r, b); }
-    if (y === maze.size - 1 && !open.includes("south")) { ctx.moveTo(l, b); ctx.lineTo(r, b); }
-  }));
-  ctx.stroke();
-}
-
-function drawSpikes(x, y, s) {
-  ctx.fillStyle = "#9aa3b5";
-  const base = (y + 0.75) * s;
-  for (let i = 0; i < 3; i++) {
-    const left = x * s + s * (0.2 + i * 0.2);
-    ctx.beginPath();
-    ctx.moveTo(left, base);
-    ctx.lineTo(left + s * 0.1, (y + 0.3) * s);
-    ctx.lineTo(left + s * 0.2, base);
-    ctx.fill();
-  }
-}
-
-/** Soft accent halo that marks the hero cat. */
-function glow([x, y], s) {
-  const [cx, cy] = [(x + 0.5) * s, (y + 0.5) * s];
-  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * 0.7);
-  halo.addColorStop(0, "rgba(139, 124, 246, 0.75)");
-  halo.addColorStop(1, "rgba(139, 124, 246, 0)");
-  ctx.fillStyle = halo;
-  ctx.fillRect(cx - s, cy - s, 2 * s, 2 * s);
-}
-
-/** Draw an emoji centred on a cell; `flip` -1 mirrors it, `hop` lifts it (in cells). */
-function emoji(char, [x, y], s, scale = 0.65, flip = 1, hop = 0) {
-  ctx.save();
-  ctx.translate((x + 0.5) * s, (y + 0.5 - hop) * s);
-  ctx.scale(flip, 1);
-  ctx.fillStyle = "#fff";
-  ctx.font = `${s * scale}px serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(char, 0, 0);
-  ctx.restore();
-}
-
-function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
 init();

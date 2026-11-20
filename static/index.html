@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maze Agent</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>🐱 Maze Agent</h1>
+    <span class="sub">a LangGraph agent escaping mazes of rising difficulty</span>
+    <span id="model" class="badge"></span>
+  </header>
+
+  <ol id="levels" class="levels"></ol>
+
+  <main>
+    <section class="card board">
+      <div class="board-head">
+        <h2 id="level-title">Level</h2>
+        <div class="stats">
+          <span id="hearts" title="Lives"></span>
+          <span>👣 <b id="steps">0</b></span>
+          <span><b id="tokens">0</b> tokens</span>
+        </div>
+      </div>
+      <canvas id="maze" width="640" height="640"></canvas>
+      <div class="controls">
+        <button id="play">▶ Play</button>
+        <label><input type="checkbox" id="auto" checked> auto-advance</label>
+        <span id="banner"></span>
+      </div>
+    </section>
+
+    <aside>
+      <section class="card">
+        <h2>Graph</h2>
+        <div id="graph" class="graph"></div>
+      </section>
+      <section class="card thoughts-card">
+        <h2>Thoughts <small>(click one to see the exact prompt)</small></h2>
+        <ol id="thoughts" class="thoughts"></ol>
+      </section>
+    </aside>
+  </main>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

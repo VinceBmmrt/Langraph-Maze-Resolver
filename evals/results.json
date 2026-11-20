@@ -1,0 +1,590 @@
+{
+  "generated": "2026-11-20T15:40:30+00:00",
+  "config": {
+    "models": [
+      "openai:gpt-5.4-mini",
+      "openai:gpt-5.4-nano"
+    ],
+    "levels": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "repeats": 2,
+    "max_attempts": 3
+  },
+  "minutes": 24.9,
+  "rows": [
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 1,
+      "chains": 2,
+      "first_try": 1.0,
+      "with_learning": 1.0,
+      "attempts": 2,
+      "steps": 16,
+      "optimal": 12,
+      "cost_per_attempt": 0.006798749999999999,
+      "cost_per_win": 0.006798749999999999,
+      "lives_lost": 0
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 2,
+      "chains": 2,
+      "first_try": 1.0,
+      "with_learning": 1.0,
+      "attempts": 2,
+      "steps": 126,
+      "optimal": 22,
+      "cost_per_attempt": 0.053966999999999966,
+      "cost_per_win": 0.053966999999999966,
+      "lives_lost": 0
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 3,
+      "chains": 2,
+      "first_try": 1.0,
+      "with_learning": 1.0,
+      "attempts": 2,
+      "steps": 124,
+      "optimal": 26,
+      "cost_per_attempt": 0.053225999999999975,
+      "cost_per_win": 0.053225999999999975,
+      "lives_lost": 0
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 4,
+      "chains": 2,
+      "first_try": 0.5,
+      "with_learning": 1.0,
+      "attempts": 4,
+      "steps": 132,
+      "optimal": 32,
+      "cost_per_attempt": 0.07994156249999998,
+      "cost_per_win": 0.15988312499999996,
+      "lives_lost": 2.25
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "chains": 2,
+      "first_try": 0.0,
+      "with_learning": 0.0,
+      "attempts": 6,
+      "steps": null,
+      "optimal": 74,
+      "cost_per_attempt": 0.17950162500000008,
+      "cost_per_win": null,
+      "lives_lost": 2.1666666666666665
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "chains": 2,
+      "first_try": 0.0,
+      "with_learning": 0.0,
+      "attempts": 6,
+      "steps": null,
+      "optimal": 64,
+      "cost_per_attempt": 0.16630324999999993,
+      "cost_per_win": null,
+      "lives_lost": 3
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 1,
+      "chains": 2,
+      "first_try": 1.0,
+      "with_learning": 1.0,
+      "attempts": 2,
+      "steps": 16,
+      "optimal": 12,
+      "cost_per_attempt": 0.0018549500000000002,
+      "cost_per_win": 0.0018549500000000002,
+      "lives_lost": 0
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 2,
+      "chains": 2,
+      "first_try": 1.0,
+      "with_learning": 1.0,
+      "attempts": 2,
+      "steps": 128,
+      "optimal": 22,
+      "cost_per_attempt": 0.015000449999999999,
+      "cost_per_win": 0.015000449999999999,
+      "lives_lost": 0
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 3,
+      "chains": 2,
+      "first_try": 1.0,
+      "with_learning": 1.0,
+      "attempts": 2,
+      "steps": 129,
+      "optimal": 26,
+      "cost_per_attempt": 0.015255850000000001,
+      "cost_per_win": 0.015255850000000001,
+      "lives_lost": 0
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 4,
+      "chains": 2,
+      "first_try": 0.5,
+      "with_learning": 1.0,
+      "attempts": 4,
+      "steps": 111,
+      "optimal": 32,
+      "cost_per_attempt": 0.014770512500000003,
+      "cost_per_win": 0.029541025000000005,
+      "lives_lost": 2.25
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 5,
+      "chains": 2,
+      "first_try": 0.5,
+      "with_learning": 1.0,
+      "attempts": 3,
+      "steps": 331.5,
+      "optimal": 74,
+      "cost_per_attempt": 0.04136878333333335,
+      "cost_per_win": 0.06205317500000003,
+      "lives_lost": 2
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "chains": 2,
+      "first_try": 0.0,
+      "with_learning": 0.0,
+      "attempts": 6,
+      "steps": null,
+      "optimal": 64,
+      "cost_per_attempt": 0.03491605833333333,
+      "cost_per_win": null,
+      "lives_lost": 3
+    }
+  ],
+  "runs": [
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 1,
+      "attempt": 1,
+      "status": "won",
+      "steps": 16,
+      "lives_lost": 0,
+      "tokens": 6753,
+      "cost": 0.00683475
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 1,
+      "attempt": 1,
+      "status": "won",
+      "steps": 16,
+      "lives_lost": 0,
+      "tokens": 6737,
+      "cost": 0.00676275
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 2,
+      "attempt": 1,
+      "status": "won",
+      "steps": 126,
+      "lives_lost": 0,
+      "tokens": 53183,
+      "cost": 0.05394224999999997
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 2,
+      "attempt": 1,
+      "status": "won",
+      "steps": 126,
+      "lives_lost": 0,
+      "tokens": 53194,
+      "cost": 0.05399174999999996
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 3,
+      "attempt": 1,
+      "status": "won",
+      "steps": 124,
+      "lives_lost": 0,
+      "tokens": 52578,
+      "cost": 0.05328224999999998
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 3,
+      "attempt": 1,
+      "status": "won",
+      "steps": 124,
+      "lives_lost": 0,
+      "tokens": 52553,
+      "cost": 0.05316974999999997
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 4,
+      "attempt": 1,
+      "status": "won",
+      "steps": 170,
+      "lives_lost": 1,
+      "tokens": 73446,
+      "cost": 0.07430324999999996
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 4,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 260,
+      "lives_lost": 3,
+      "tokens": 111857,
+      "cost": 0.11391149999999994
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 4,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 170,
+      "lives_lost": 3,
+      "tokens": 82608,
+      "cost": 0.08313599999999999
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 4,
+      "attempt": 3,
+      "status": "won",
+      "steps": 94,
+      "lives_lost": 2,
+      "tokens": 49249,
+      "cost": 0.0484155
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 341,
+      "lives_lost": 3,
+      "tokens": 148362,
+      "cost": 0.15118274999999998
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 319,
+      "lives_lost": 3,
+      "tokens": 156765,
+      "cost": 0.15723750000000017
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "attempt": 3,
+      "status": "dead",
+      "steps": 254,
+      "lives_lost": 3,
+      "tokens": 137300,
+      "cost": 0.1338375000000001
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 232,
+      "lives_lost": 3,
+      "tokens": 100826,
+      "cost": 0.1022145
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "attempt": 2,
+      "status": "out_of_steps",
+      "steps": 512,
+      "lives_lost": 0,
+      "tokens": 255068,
+      "cost": 0.26055600000000034
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 5,
+      "attempt": 3,
+      "status": "out_of_steps",
+      "steps": 512,
+      "lives_lost": 1,
+      "tokens": 271537,
+      "cost": 0.2719814999999998
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 242,
+      "lives_lost": 3,
+      "tokens": 106244,
+      "cost": 0.10805174999999999
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 354,
+      "lives_lost": 3,
+      "tokens": 173242,
+      "cost": 0.17395275000000004
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "attempt": 3,
+      "status": "dead",
+      "steps": 393,
+      "lives_lost": 3,
+      "tokens": 205189,
+      "cost": 0.20311049999999994
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 327,
+      "lives_lost": 3,
+      "tokens": 143452,
+      "cost": 0.14643149999999994
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 372,
+      "lives_lost": 3,
+      "tokens": 180782,
+      "cost": 0.18185774999999987
+    },
+    {
+      "model": "openai:gpt-5.4-mini",
+      "level": 6,
+      "attempt": 3,
+      "status": "dead",
+      "steps": 355,
+      "lives_lost": 3,
+      "tokens": 186802,
+      "cost": 0.1844152499999998
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 1,
+      "attempt": 1,
+      "status": "won",
+      "steps": 16,
+      "lives_lost": 0,
+      "tokens": 6748,
+      "cost": 0.0018399500000000001
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 1,
+      "attempt": 1,
+      "status": "won",
+      "steps": 16,
+      "lives_lost": 0,
+      "tokens": 6772,
+      "cost": 0.0018699500000000002
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 2,
+      "attempt": 1,
+      "status": "won",
+      "steps": 126,
+      "lives_lost": 0,
+      "tokens": 53295,
+      "cost": 0.014712000000000001
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 2,
+      "attempt": 1,
+      "status": "won",
+      "steps": 130,
+      "lives_lost": 0,
+      "tokens": 55077,
+      "cost": 0.015288899999999998
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 3,
+      "attempt": 1,
+      "status": "won",
+      "steps": 130,
+      "lives_lost": 0,
+      "tokens": 55333,
+      "cost": 0.015386300000000002
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 3,
+      "attempt": 1,
+      "status": "won",
+      "steps": 128,
+      "lives_lost": 0,
+      "tokens": 54459,
+      "cost": 0.015125399999999999
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 4,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 112,
+      "lives_lost": 3,
+      "tokens": 49896,
+      "cost": 0.014157150000000002
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 4,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 105,
+      "lives_lost": 3,
+      "tokens": 52271,
+      "cost": 0.014547100000000006
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 4,
+      "attempt": 3,
+      "status": "won",
+      "steps": 153,
+      "lives_lost": 2,
+      "tokens": 81841,
+      "cost": 0.021994100000000003
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 4,
+      "attempt": 1,
+      "status": "won",
+      "steps": 69,
+      "lives_lost": 1,
+      "tokens": 30127,
+      "cost": 0.0083837
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 5,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 324,
+      "lives_lost": 3,
+      "tokens": 142296,
+      "cost": 0.039807600000000026
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 5,
+      "attempt": 2,
+      "status": "won",
+      "steps": 348,
+      "lives_lost": 2,
+      "tokens": 169571,
+      "cost": 0.04614670000000005
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 5,
+      "attempt": 1,
+      "status": "won",
+      "steps": 315,
+      "lives_lost": 1,
+      "tokens": 137184,
+      "cost": 0.038152049999999986
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 228,
+      "lives_lost": 3,
+      "tokens": 101220,
+      "cost": 0.028514850000000005
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 288,
+      "lives_lost": 3,
+      "tokens": 145277,
+      "cost": 0.04046995
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "attempt": 3,
+      "status": "dead",
+      "steps": 158,
+      "lives_lost": 3,
+      "tokens": 86138,
+      "cost": 0.02306980000000002
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "attempt": 1,
+      "status": "dead",
+      "steps": 318,
+      "lives_lost": 3,
+      "tokens": 139878,
+      "cost": 0.0389565
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "attempt": 2,
+      "status": "dead",
+      "steps": 155,
+      "lives_lost": 3,
+      "tokens": 77867,
+      "cost": 0.02127174999999999
+    },
+    {
+      "model": "openai:gpt-5.4-nano",
+      "level": 6,
+      "attempt": 3,
+      "status": "dead",
+      "steps": 397,
+      "lives_lost": 3,
+      "tokens": 215875,
+      "cost": 0.0572135
+    }
+  ]
+}

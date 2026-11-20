@@ -13,7 +13,7 @@ from maze_agent.levels import Level, build
 async def play(level: Level, brain: Brain, thread_id: str) -> AsyncIterator[dict[str, Any]]:
     """Yield a `think` event per LLM decision and an `act` event per move."""
     maze, world = build(level)
-    ctx = Context(maze=maze, brain=brain)
+    ctx = Context(maze=maze, brain=brain, max_steps=level.max_steps)
     config: RunnableConfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": 3 * ctx.max_steps}
     async for chunk in graph.astream(start_state(maze, world), config, context=ctx, stream_mode="updates"):
         for node, update in chunk.items():

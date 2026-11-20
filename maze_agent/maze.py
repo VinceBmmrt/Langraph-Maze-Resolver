@@ -42,23 +42,48 @@ class Maze:
 
 
 def generate(size: int, seed: int) -> Maze:
-    """Carve a perfect maze: exactly one path between any two cells."""
+    """Carve a perfect maze (one path between any two cells) with the growing-tree algorithm.
+
+    Growing from the newest cell half of the time and from a random one otherwise gives
+    shorter corridors and many more junctions than a pure depth-first carve.
+    """
     rng = random.Random(seed)
     passages: dict[Pos, set[str]] = {(x, y): set() for x in range(size) for y in range(size)}
-    stack, seen = [(0, 0)], {(0, 0)}
-    while stack:
-        cell = stack[-1]
+    active, seen = [(0, 0)], {(0, 0)}
+    while active:
+        i = len(active) - 1 if rng.random() < 0.5 else rng.randrange(len(active))
+        cell = active[i]
         options = [d for d in DIRECTIONS if step(cell, d) in passages and step(cell, d) not in seen]
         if not options:
-            stack.pop()
+            active.pop(i)
             continue
         d = rng.choice(options)
         nxt = step(cell, d)
         passages[cell].add(d)
         passages[nxt].add(OPPOSITE[d])
         seen.add(nxt)
-        stack.append(nxt)
+        active.append(nxt)
     return Maze(size, seed, {cell: frozenset(ds) for cell, ds in passages.items()})
+
+
+def add_loops(maze: Maze, count: int, rng: random.Random, region: frozenset[Pos] | None = None) -> Maze:
+    """Open `count` extra walls so some places can be reached two ways.
+
+    With `region`, a new opening never joins a cell inside it to a cell outside it.
+    """
+    walls = [
+        (cell, d)
+        for cell in sorted(maze.passages)
+        for d in ("south", "east")
+        if step(cell, d) in maze.passages
+        and d not in maze.passages[cell]
+        and (region is None or (cell in region) == (step(cell, d) in region))
+    ]
+    passages = {cell: set(ds) for cell, ds in maze.passages.items()}
+    for cell, d in rng.sample(walls, min(count, len(walls))):
+        passages[cell].add(d)
+        passages[step(cell, d)].add(OPPOSITE[d])
+    return Maze(maze.size, maze.seed, {cell: frozenset(ds) for cell, ds in passages.items()})
 
 
 def shortest_path(maze: Maze, start: Pos, goal: Pos, blocked: frozenset[Pos] = frozenset()) -> list[Pos]:

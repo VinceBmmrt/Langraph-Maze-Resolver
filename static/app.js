@@ -176,7 +176,8 @@ function draw() {
   emoji("🏁", maze.goal, s);
   if (world.key) emoji("🔑", world.key, s);
   if (world.door) emoji(world.has_key ? "🔓" : "🚪", world.door, s);
-  world.dogs.forEach((dog, i) => emoji("🐕", dog.pos, s, 0.75, view.dogFacing[i]));
+  world.dogs.forEach((dog, i) => emoji("🐩", dog.pos, s, 0.75, view.dogFacing[i]));
+  glow(view.drawnCat, s);
   const moving = Math.hypot(view.cat[0] - view.drawnCat[0], view.cat[1] - view.drawnCat[1]);
   emoji("🐈", view.drawnCat, s, 0.85, view.catFacing, Math.sin(Math.PI * Math.min(moving, 1)) * 0.25);
 }
@@ -207,6 +208,16 @@ function drawSpikes(x, y, s) {
     ctx.lineTo(left + s * 0.2, base);
     ctx.fill();
   }
+}
+
+/** Soft accent halo that marks the hero cat. */
+function glow([x, y], s) {
+  const [cx, cy] = [(x + 0.5) * s, (y + 0.5) * s];
+  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * 0.7);
+  halo.addColorStop(0, "rgba(139, 124, 246, 0.75)");
+  halo.addColorStop(1, "rgba(139, 124, 246, 0)");
+  ctx.fillStyle = halo;
+  ctx.fillRect(cx - s, cy - s, 2 * s, 2 * s);
 }
 
 /** Draw an emoji centred on a cell; `flip` -1 mirrors it, `hop` lifts it (in cells). */

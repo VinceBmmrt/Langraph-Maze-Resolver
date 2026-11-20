@@ -57,30 +57,7 @@ Côté LangChain : `init_chat_model` (n'importe quel fournisseur à partir d'un 
 
 ## Évaluation
 
-`maze_agent/eval.py` fait jouer chaque modèle sur chaque niveau, par chaînes de 3 tentatives au plus ; chaque tentative lit les leçons des échecs précédents. Il mesure le taux de réussite au premier essai et après apprentissage, les pas comparés à l'optimum, les vies perdues, et le coût par tentative et par victoire. Les résultats vont dans `evals/results.json` et s'affichent dans l'onglet **Evaluation**.
-
-Dernière exécution : 41 parties, 2 chaînes par niveau, 3 tentatives au plus, 24.9 minutes, 3.08 $.
-
-| Modèle | Niveau | Premier essai | Après apprentissage | Pas (optimum) | Coût par victoire |
-|---|---|---|---|---|---|
-| gpt-5.4-mini | 1 | 100% | 100% | 16 (12) | $0.007 |
-| gpt-5.4-mini | 2 | 100% | 100% | 126 (22) | $0.054 |
-| gpt-5.4-mini | 3 | 100% | 100% | 124 (26) | $0.053 |
-| gpt-5.4-mini | 4 | 50% | 100% | 132 (32) | $0.160 |
-| gpt-5.4-mini | 5 | 0% | 0% | – | – |
-| gpt-5.4-mini | 6 | 0% | 0% | – | – |
-| gpt-5.4-nano | 1 | 100% | 100% | 16 (12) | $0.002 |
-| gpt-5.4-nano | 2 | 100% | 100% | 128 (22) | $0.015 |
-| gpt-5.4-nano | 3 | 100% | 100% | 129 (26) | $0.015 |
-| gpt-5.4-nano | 4 | 50% | 100% | 111 (32) | $0.030 |
-| gpt-5.4-nano | 5 | 50% | 100% | 332 (74) | $0.062 |
-| gpt-5.4-nano | 6 | 0% | 0% | – | – |
-
-Ce qu'on en retient :
-- Les niveaux 1 à 3 sont toujours gagnés. Aux niveaux 2 et 3, le chat parcourt environ 5 fois le chemin optimal : il explore sans carte.
-- Niveau 4 (chiens) : 50 % au premier essai, **100 % après apprentissage**. Les leçons du Store font leur travail.
-- Niveau 5 (clé et porte) : nano le gagne après apprentissage, mini jamais. Le modèle le plus petit et le moins cher fait mieux ici : il faut mesurer, pas supposer.
-- Le niveau 6 n'a jamais été gagné avec 3 vies (12 tentatives). Il a maintenant 5 vies : lors d'une nouvelle mesure interrompue par la machine, mini l'a gagné du premier coup dans ses deux chaînes, tandis que nano a perdu ses 4 tentatives. Relancez `--levels 6 --update` pour mettre le tableau à jour.
+`maze_agent/eval.py` fait jouer chaque modèle sur chaque niveau, par chaînes de 3 tentatives au plus ; chaque tentative lit les leçons des échecs précédents. Il mesure le taux de réussite au premier essai et après apprentissage, les pas comparés à l'optimum, les vies perdues, et le coût par tentative et par victoire. Les résultats vont dans `evals/results.json` et s'affichent dans l'onglet **Evaluation** de l'application.
 
 ## Code
 

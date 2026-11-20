@@ -57,30 +57,7 @@ From LangChain: `init_chat_model` (any provider from one id) and `with_structure
 
 ## Evaluation
 
-`maze_agent/eval.py` runs every model on every level in chains of up to 3 attempts; each attempt reads the lessons of the failed ones. It reports the win rate on the first try and after learning, steps against the optimum, lives lost, and cost per attempt and per win. Results go to `evals/results.json` and show in the **Evaluation** tab.
-
-Latest run: 41 runs, 2 chains per level, up to 3 attempts, 24.9 minutes, $3.08.
-
-| Model | Level | First try | After learning | Steps (optimal) | Cost per win |
-|---|---|---|---|---|---|
-| gpt-5.4-mini | 1 | 100% | 100% | 16 (12) | $0.007 |
-| gpt-5.4-mini | 2 | 100% | 100% | 126 (22) | $0.054 |
-| gpt-5.4-mini | 3 | 100% | 100% | 124 (26) | $0.053 |
-| gpt-5.4-mini | 4 | 50% | 100% | 132 (32) | $0.160 |
-| gpt-5.4-mini | 5 | 0% | 0% | – | – |
-| gpt-5.4-mini | 6 | 0% | 0% | – | – |
-| gpt-5.4-nano | 1 | 100% | 100% | 16 (12) | $0.002 |
-| gpt-5.4-nano | 2 | 100% | 100% | 128 (22) | $0.015 |
-| gpt-5.4-nano | 3 | 100% | 100% | 129 (26) | $0.015 |
-| gpt-5.4-nano | 4 | 50% | 100% | 111 (32) | $0.030 |
-| gpt-5.4-nano | 5 | 50% | 100% | 332 (74) | $0.062 |
-| gpt-5.4-nano | 6 | 0% | 0% | – | – |
-
-What it shows:
-- Levels 1 to 3 are always won. On levels 2 and 3 the cat walks about 5 times the optimal path: it explores without a map.
-- Level 4 (dogs): 50% on the first try, **100% after learning**. The lessons from the Store do their job.
-- Level 5 (key and door): nano wins it after learning, mini never does. The smaller, cheaper model is better here: measure, don't assume.
-- Level 6 was never won with 3 lives (12 attempts). It now has 5 lives: in a re-run cut short by the machine, mini won it on the first try in both chains while nano lost all 4 attempts. Re-run `--levels 6 --update` to refresh the table.
+`maze_agent/eval.py` runs every model on every level in chains of up to 3 attempts; each attempt reads the lessons of the failed ones. It reports the win rate on the first try and after learning, steps against the optimum, lives lost, and cost per attempt and per win. Results go to `evals/results.json` and show in the **Evaluation** tab of the app.
 
 ## Code
 

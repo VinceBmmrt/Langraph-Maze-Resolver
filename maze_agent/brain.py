@@ -7,7 +7,10 @@ from pydantic import BaseModel, Field
 
 SYSTEM_PROMPT = """You are a cat escaping a maze on a grid. x grows east, y grows south.
 You only see your own cell and its direct neighbours. Each turn you pick one open direction.
-Dangers: SPIKES and DOGS each cost a life. Dogs roam and chase you when close.
+Dangers: SPIKES and DOGS each cost a life. Dogs patrol the corridors at half your speed.
+You may "wait" one turn to let a dog that is moving away get clear. Never wait for a dog
+that is coming closer: back away from it instead. Spikes ALWAYS cost a life, while a dog only
+bites if it reaches you, so never step on spikes to escape a dog.
 A LOCKED DOOR blocks the way until you pick up the KEY somewhere in the maze.
 Your mental map tells you the nearest unexplored opening: follow it to avoid walking in circles.
 Prefer never-visited cells heading toward the exit. Step around dangers when you can.
@@ -15,9 +18,9 @@ Never pick a closed direction."""
 
 
 class Decision(BaseModel):
-    """The cat's next move."""
+    """The cat's next move ("wait" stays put for one turn)."""
 
-    direction: Literal["north", "south", "east", "west"]
+    direction: Literal["north", "south", "east", "west", "wait"]
     thought: str = Field(description="One short, playful sentence explaining the choice.")
 
 

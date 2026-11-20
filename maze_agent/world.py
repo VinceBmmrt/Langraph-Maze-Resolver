@@ -5,9 +5,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict
 
-from maze_agent.maze import Maze, Pos, shortest_path, step
-
-CHASE_RANGE = 4
+from maze_agent.maze import Maze, Pos, step
 
 
 class Dog(BaseModel):
@@ -15,6 +13,7 @@ class Dog(BaseModel):
 
     pos: Pos
     home: Pos
+    prev: Pos | None = None
 
 
 class World(BaseModel):
@@ -44,11 +43,13 @@ class Outcome:
     pos: Pos
     world: World
     hurt: int
-    event: str  # moved | bump | locked | spikes | dog | key
+    event: str  # moved | waited | bump | locked | spikes | dog | key
 
 
 def move_cat(maze: Maze, world: World, pos: Pos, direction: str) -> Outcome:
-    """Walk one cell. Walls and a locked door keep the cat in place."""
+    """Walk one cell, or stay put on "wait". Walls and a locked door keep the cat in place."""
+    if direction == "wait":
+        return Outcome(pos, world, 0, "waited")
     if direction not in maze.exits(pos):
         return Outcome(pos, world, 0, "bump")
     target = step(pos, direction)
@@ -64,20 +65,20 @@ def move_cat(maze: Maze, world: World, pos: Pos, direction: str) -> Outcome:
 
 
 def move_dogs(maze: Maze, world: World, cat: Pos, turn: int) -> tuple[World, int]:
-    """On even turns, each dog chases a nearby cat or wanders. Returns the new world and bites.
+    """On even turns, each dog patrols one cell. Returns the new world and bites.
 
-    Dogs are half as fast as the cat, so a careful cat can always run away.
+    Dogs never chase and move at half the cat's speed: they are moving obstacles a careful cat can avoid.
     """
     if turn % 2:
         return world, 0
     rng = random.Random(maze.seed * 1000 + turn)
     bites, dogs = 0, []
     for dog in world.dogs:
-        nxt = _dog_step(maze, world, dog, cat, rng)
+        nxt = _patrol_step(maze, world, dog, rng)
         if nxt == cat:
             bites += 1
             nxt = dog.home
-        dogs.append(dog.model_copy(update={"pos": nxt}))
+        dogs.append(dog.model_copy(update={"pos": nxt, "prev": None if nxt == dog.home else dog.pos}))
     return world.model_copy(update={"dogs": tuple(dogs)}), bites
 
 
@@ -86,11 +87,9 @@ def send_home(world: World, dog: Dog) -> World:
     return world.model_copy(update={"dogs": dogs})
 
 
-def _dog_step(maze: Maze, world: World, dog: Dog, cat: Pos, rng: random.Random) -> Pos:
-    blocked = world.locked | set(world.spikes)
-    path = shortest_path(maze, dog.pos, cat, blocked)
-    if 1 < len(path) <= CHASE_RANGE + 1:
-        return path[1]
-    options = [step(dog.pos, d) for d in maze.exits(dog.pos)]
-    options = [c for c in options if c not in blocked and c != maze.start]
-    return rng.choice(options) if options else dog.pos
+def _patrol_step(maze: Maze, world: World, dog: Dog, rng: random.Random) -> Pos:
+    """Keep walking forward, turning back only at a dead end. Dogs avoid spikes, the door and the start."""
+    blocked = world.locked | set(world.spikes) | {maze.start}
+    options = [step(dog.pos, d) for d in maze.exits(dog.pos) if step(dog.pos, d) not in blocked]
+    forward = [c for c in options if c != dog.prev]
+    return rng.choice(forward or options or [dog.pos])

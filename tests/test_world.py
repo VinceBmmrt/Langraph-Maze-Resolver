@@ -32,9 +32,10 @@ def test_level_is_solvable_unhurt(level):
         assert set(shortest_path(maze, dog.pos, maze.goal, frozenset(world.spikes))) & set(solution)
         assert len(shortest_path(maze, maze.start, dog.home)) > level.size
     if level.door:
+        assert world.key and world.door
         assert not shortest_path(maze, maze.start, maze.goal, world.locked)  # the door cannot be bypassed
         assert len(shortest_path(maze, world.key, world.door)) > level.size  # the key is a real detour
-        assert world.key and shortest_path(maze, maze.start, world.key, world.locked)
+        assert shortest_path(maze, maze.start, world.key, world.locked)  # the key is reachable before the door
 
 
 def test_wall_bump_and_locked_door():

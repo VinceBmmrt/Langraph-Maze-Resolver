@@ -17,6 +17,7 @@ class Level:
     dogs: int = 0
     door: bool = False
     loops: int = 0
+    lives: int = 3
 
     @property
     def max_steps(self) -> int:

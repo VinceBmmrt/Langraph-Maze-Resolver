@@ -31,7 +31,7 @@ LEVELS = (
     Level(3, "Spikes", 12, 103, spikes=8, loops=3),
     Level(4, "Dogs", 14, 104, spikes=8, dogs=3, loops=8),
     Level(5, "Locked door", 16, 105, spikes=10, dogs=3, door=True, loops=10),
-    Level(6, "The final maze", 18, 106, spikes=14, dogs=4, door=True, loops=14),
+    Level(6, "The final maze", 18, 106, spikes=14, dogs=4, door=True, loops=14, lives=5),
 )
 
 
